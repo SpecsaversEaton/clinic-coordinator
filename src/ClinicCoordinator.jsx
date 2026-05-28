@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-const API_URL = "https://your-backend-url.com/knowledge";
+const API_URL = "https://YOUR_PROJECT.supabase.co/rest/v1/knowledge";
+const API_KEY = "YOUR_ANON_KEY";
 
 export default function ClinicCoordinator() {
   const [knowledgeBase, setKnowledgeBase] = useState({});
@@ -14,9 +15,24 @@ export default function ClinicCoordinator() {
 
   const loadKnowledge = async () => {
     try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      setKnowledgeBase(data || {});
+const res = await fetch(API_URL, {
+  headers: {
+    "apikey": API_KEY,
+    "Authorization": `Bearer ${API_KEY}`
+  }
+});
+
+const rows = await res.json();
+
+// Convert Supabase rows → single object
+const kb = {};
+rows.forEach(row => {
+  if (row.data) {
+    Object.assign(kb, row.data);
+  }
+});
+
+setKnowledgeBase(kb);
     } catch (err) {
       console.error(err);
     }
@@ -24,7 +40,19 @@ export default function ClinicCoordinator() {
 
   const saveKnowledge = async (kb) => {
     try {
-      await fetch(API_URL, {
+await fetch(API_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "apikey": API_KEY,
+    "Authorization": `Bearer ${API_KEY}`,
+    "Prefer": "resolution=merge-duplicates"
+  },
+  body: JSON.stringify({
+    id: 1,
+    data: updatedKB
+  })
+});
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(kb)
